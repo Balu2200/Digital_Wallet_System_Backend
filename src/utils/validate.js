@@ -12,4 +12,13 @@ const validate = (req) =>{
     return { firstName, lastName, email, password };
 }
 
-module.exports = {validate};
+const validateEditProfile = (req) =>{
+   const allowedFields = ["firstName", "lastName"];
+   const idEditallowed = Object.keys(req.body).every((field) => allowedFields.includes(field));
+   if (!isEditAllowed) {
+        throw new Error("Invalid fields in profile update");
+    }
+    return req.body;
+}
+
+module.exports = {validate, validateEditProfile};
