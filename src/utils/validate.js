@@ -1,24 +1,39 @@
+const validator = require("validator");
 
-const validate = (req) =>{
+const validate = (reqBody) => {
+  const firstName = reqBody.firstName?.trim();
+  const lastName = reqBody.lastName?.trim();
+  const email = reqBody.email?.trim();
+  const password = reqBody.password;
 
-    const{firstName, lastName, email, password}= req.body
-    if (firstName === "" || lastName === "") {
-      throw new Error("Name is not valid");
-    } else if (!validator.isEmail(email)) {
-      throw new Error("Enter the correct email");
-    } else if (!validator.isStrongPassword(password)) {
-      throw new Error("Please enter strong password");
-    }
-    return { firstName, lastName, email, password };
-}
+  if (!firstName || !lastName) {
+    throw new Error("Name is not valid");
+  }
+  if (!validator.isEmail(email)) {
+    throw new Error("Enter a valid email");
+  }
+  if (!validator.isStrongPassword(password)) {
+    throw new Error("Please enter a strong password");
+  }
 
-const validateEditProfile = (req) =>{
-   const allowedFields = ["firstName", "lastName"];
-   const idEditallowed = Object.keys(req.body).every((field) => allowedFields.includes(field));
-   if (!isEditAllowed) {
-        throw new Error("Invalid fields in profile update");
-    }
-    return req.body;
-}
+  return { firstName, lastName, email, password };
+};
 
-module.exports = {validate, validateEditProfile};
+const validateEditProfile = (reqBody) => {
+  
+  const allowedFields = new Set(["firstName", "lastName"]);
+  if (Object.keys(reqBody).length === 0) {
+    throw new Error("Profile update cannot be empty");
+  }
+  const isEditAllowed = Object.keys(reqBody).every((field) =>
+    allowedFields.has(field)
+  );
+
+  if (!isEditAllowed) {
+    throw new Error("Invalid fields in profile update");
+  }
+
+  return reqBody;
+};
+
+module.exports = { validate, validateEditProfile };

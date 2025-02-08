@@ -1,25 +1,13 @@
-const { default: mongoose } = require("mongoose");
-const moongoose = require("mongoose");
+const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
+const validator = require("validator");
+require("dotenv").config();
 
 const userSchema = new mongoose.Schema(
   {
-    firstName: {
-      type: String,
-      required: true,
-      minLength: 4,
-      maxLength: 50,
-    },
-
-    lastName: {
-      type: String,
-      required: true,
-      minLength: 4,
-      maxLength: 50,
-    },
-
+    firstName: { type: String, required: true, minLength: 4, maxLength: 50 },
+    lastName: { type: String, required: true, minLength: 4, maxLength: 50 },
     email: {
       type: String,
       trim: true,
@@ -32,43 +20,23 @@ const userSchema = new mongoose.Schema(
         }
       },
     },
-
-    password: {
-      trim: true,
-      type: String,
-      required: true,
-      validate(value) {
-        if (!validator.isStrongPassword(value)) {
-          throw new Error("Enter a strong password");
-        }
-      },
-    },
+    password: { type: String, required: true }
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-userSchema.index({ firstName: 1, lastName: 1 });
 
 userSchema.methods.getJWT = async function () {
   const user = this;
-  const token = await jwt.sign({ _id: user._id }, "PayTM@22", {
+  const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
   return token;
 };
 
 userSchema.methods.validatePassword = async function (passwordInputByUser) {
-  const user = this;
-  const passwordHash = user.password;
-  const isPasswordValid = await bcrypt.compare(
-    passwordInputByUser,
-    passwordHash
-  );
-  return isPasswordValid;
+  return await bcrypt.compare(passwordInputByUser, this.password);
 };
 
-const userModel = mongoose.model("user", userSchema);
-
+const userModel = mongoose.model("users", userSchema); 
 module.exports = userModel;
