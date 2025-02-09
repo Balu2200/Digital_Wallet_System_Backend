@@ -47,7 +47,7 @@ profileRouter.put("/profile/update", userAuth, async (req, res) => {
 });
 
 
-profileRouter.get("/profile/bulk", async (req, res) => {
+profileRouter.get("/profile/bulk",  async (req, res) => {
   try {
     const filter = req.query.filter || "";
     const page = parseInt(req.query.page) || 1; 
@@ -85,6 +85,20 @@ profileRouter.get("/profile/bulk", async (req, res) => {
     res
       .status(500)
       .json({ error: "Something went wrong", message: err.message });
+  }
+});
+
+profileRouter.get("/profile/me", userAuth, async (req, res) => {
+  try {
+    const user = await userModel
+      .findById(req.user._id)
+      .select("firstName lastName email");
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.json({ user });
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
