@@ -4,6 +4,7 @@ const accountRouter = express.Router();
 const  accountModel  = require("../models/account");
 const { default: mongoose } = require("mongoose");
 const transactionModel = require("../models/transactions");
+const userModel = require("../models/user");
 
 
 
@@ -47,6 +48,14 @@ accountRouter.post("/account/transfer", userAuth, async (req, res) => {
       throw new Error("Invalid recipient account");
     }
 
+  
+    const sender = await userModel.findById(req.userId);
+    const receiver = await userModel.findById(to);
+
+    if (!sender || !receiver) {
+      throw new Error("User details not found");
+    }
+
     await accountModel
       .updateOne({ userId: req.userId }, { $inc: { balance: -amount } })
       .session(session);
@@ -54,30 +63,25 @@ accountRouter.post("/account/transfer", userAuth, async (req, res) => {
       .updateOne({ userId: to }, { $inc: { balance: amount } })
       .session(session);
 
-    // ✅ Save transaction record
-    const transaction = new transactionModel({
-      senderId: req.userId,
-      receiverId: to,
-      amount,
-      status: "success",
-    });
-
-    await transaction.save({ session });
+    await transactionModel.create(
+      [
+        {
+          senderId: req.userId,
+          senderName: sender.firstName + " " + sender.lastName,
+          receiverId: to,
+          receiverName: receiver.firstName + " " + receiver.lastName,
+          amount,
+          status: "success",
+        },
+      ],
+      { session }
+    );
 
     await session.commitTransaction();
     res.json({ message: "Transaction successful" });
   } catch (err) {
     await session.abortTransaction();
     console.error("Transaction error:", err);
-
-    // ✅ Save failed transaction record
-    await new transactionModel({
-      senderId: req.userId,
-      receiverId: to,
-      amount,
-      status: "failed",
-    }).save();
-
     res.status(400).json({ error: "Transaction failed", message: err.message });
   } finally {
     session.endSession();
@@ -108,38 +112,38 @@ accountRouter.put("/account/update", userAuth, async (req, res) => {
   }
 });
 
-accountRouter.get("/account/transactions", userAuth, async(req, res) =>{
-   
-  try{
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 5;
-      const skip = (page - 1) * limit;
+accountRouter.get("/account/transactions", userAuth, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
 
-      const transactions = await transactionModel
-      .find({ userId: req.user._id })
-      .sort({ date: -1 })
+    const transactions = await transactionModel
+      .find({
+        $or: [{ senderId: req.user._id }, { receiverId: req.user._id }],
+      })
+      .sort({ timestamp: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .select("senderName receiverName amount timestamp status"); 
 
-      const totalTransactions = await transactionModel.countDocuments({
-        userId: req.user._id,
-      });
+    const totalTransactions = await transactionModel.countDocuments({
+      $or: [{ senderId: req.user._id }, { receiverId: req.user._id }],
+    });
 
-      res.json({
-        transactions,
-        totalTransactions,
-        totalPages: Math.ceil(totalTransactions / limit),
-        currentPage: page,
-      });
-  } 
-  catch(err){
+    res.json({
+      transactions,
+      totalTransactions,
+      totalPages: Math.ceil(totalTransactions / limit),
+      currentPage: page,
+    });
+  } catch (err) {
     console.error("Error fetching transactions:", err);
     res
       .status(500)
       .json({ error: "Something went wrong", message: err.message });
   }
 });
-
 
 
 module.exports = accountRouter;
