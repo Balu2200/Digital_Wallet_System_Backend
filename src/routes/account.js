@@ -3,6 +3,8 @@ const { userAuth } = require("../middleware/auth");
 const accountRouter = express.Router();
 const  accountModel  = require("../models/account");
 const { default: mongoose } = require("mongoose");
+const transactionModel = require("../models/transactions");
+
 
 
 accountRouter.get("/account/balance", userAuth, async (req, res) => {
@@ -52,11 +54,30 @@ accountRouter.post("/account/transfer", userAuth, async (req, res) => {
       .updateOne({ userId: to }, { $inc: { balance: amount } })
       .session(session);
 
+    // ✅ Save transaction record
+    const transaction = new transactionModel({
+      senderId: req.userId,
+      receiverId: to,
+      amount,
+      status: "success",
+    });
+
+    await transaction.save({ session });
+
     await session.commitTransaction();
     res.json({ message: "Transaction successful" });
   } catch (err) {
     await session.abortTransaction();
     console.error("Transaction error:", err);
+
+    // ✅ Save failed transaction record
+    await new transactionModel({
+      senderId: req.userId,
+      receiverId: to,
+      amount,
+      status: "failed",
+    }).save();
+
     res.status(400).json({ error: "Transaction failed", message: err.message });
   } finally {
     session.endSession();
@@ -86,6 +107,39 @@ accountRouter.put("/account/update", userAuth, async (req, res) => {
       .json({ error: "Something went wrong", message: err.message });
   }
 });
+
+accountRouter.get("/account/transactions", userAuth, async(req, res) =>{
+   
+  try{
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 5;
+      const skip = (page - 1) * limit;
+
+      const transactions = await transactionModel
+      .find({ userId: req.user._id })
+      .sort({ date: -1 })
+      .skip(skip)
+      .limit(limit);
+
+      const totalTransactions = await transactionModel.countDocuments({
+        userId: req.user._id,
+      });
+
+      res.json({
+        transactions,
+        totalTransactions,
+        totalPages: Math.ceil(totalTransactions / limit),
+        currentPage: page,
+      });
+  } 
+  catch(err){
+    console.error("Error fetching transactions:", err);
+    res
+      .status(500)
+      .json({ error: "Something went wrong", message: err.message });
+  }
+});
+
 
 
 module.exports = accountRouter;
