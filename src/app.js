@@ -5,16 +5,8 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-const allowedOrigins = [
-  "http://localhost:5173", // Local development
-  "https://pay-swift-frontend.vercel.app/",
-];
-
 app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
+  cors()
 );
 app.use(express.json());
 app.use(cookieParser());
