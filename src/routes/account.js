@@ -63,4 +63,29 @@ accountRouter.post("/account/transfer", userAuth, async (req, res) => {
   }
 });
 
+accountRouter.put("/account/update", userAuth, async (req, res) => {
+  try {
+    const { amount } = req.body; 
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ error: "Invalid amount" });
+    }
+  
+    const account = await accountModel.findOne({ userId: req.user._id });
+    if (!account) {
+      return res.status(404).json({ error: "No account found" });
+    }
+
+    account.balance += Number(amount);
+    await account.save();
+    res.json({ balance: account.balance });
+    
+  } catch (err) {
+    console.error("Balance update error:", err);
+    res
+      .status(500)
+      .json({ error: "Something went wrong", message: err.message });
+  }
+});
+
+
 module.exports = accountRouter;
