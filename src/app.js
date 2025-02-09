@@ -5,12 +5,18 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
+const allowedOrigins = [
+  "http://localhost:5173", 
+  "https://payswift-frontend.onrender.com", 
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use(cookieParser());
 
