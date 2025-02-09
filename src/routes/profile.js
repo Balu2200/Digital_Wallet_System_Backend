@@ -50,18 +50,36 @@ profileRouter.put("/profile/update", userAuth, async (req, res) => {
 profileRouter.get("/profile/bulk", async (req, res) => {
   try {
     const filter = req.query.filter || "";
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 7; 
+    const skip = (page - 1) * limit;
 
-    const users = await userModel.find(
-      {
-        $or: [
-          { firstName: { $regex: filter, $options: "i" } },
-          { lastName: { $regex: filter, $options: "i" } },
-        ],
-      },
-      "username firstName lastName _id"
-    ); // Select only required fields
+    const users = await userModel
+      .find(
+        {
+          $or: [
+            { firstName: { $regex: filter, $options: "i" } },
+            { lastName: { $regex: filter, $options: "i" } },
+          ],
+        },
+        "username firstName lastName _id"
+      )
+      .skip(skip)
+      .limit(limit);
 
-    res.json({ users });
+    const totalUsers = await userModel.countDocuments({
+      $or: [
+        { firstName: { $regex: filter, $options: "i" } },
+        { lastName: { $regex: filter, $options: "i" } },
+      ],
+    });
+
+    res.json({
+      users,
+      totalUsers,
+      totalPages: Math.ceil(totalUsers / limit),
+      currentPage: page,
+    });
   } catch (err) {
     console.error("Error fetching users:", err);
     res
@@ -69,5 +87,6 @@ profileRouter.get("/profile/bulk", async (req, res) => {
       .json({ error: "Something went wrong", message: err.message });
   }
 });
+
 
 module.exports = profileRouter;
