@@ -10,7 +10,7 @@ const {userAuth} = require("../middleware/auth");
 
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
-    const { password, ...safeUser } = req.user._doc || req.user; // Exclude password
+    const { password, ...safeUser } = req.user._doc || req.user; 
     res.json(safeUser);
   } catch (err) {
     console.error("Profile view error:", err);
@@ -47,7 +47,7 @@ profileRouter.put("/profile/update", userAuth, async (req, res) => {
 });
 
 
-profileRouter.get("/profile/bulk",  async (req, res) => {
+profileRouter.get("/profile/bulk", userAuth, async (req, res) => {
   try {
     const filter = req.query.filter || "";
     const page = parseInt(req.query.page) || 1; 
@@ -90,9 +90,8 @@ profileRouter.get("/profile/bulk",  async (req, res) => {
 
 profileRouter.get("/profile/me", userAuth, async (req, res) => {
   try {
-    const user = await userModel
-      .findById(req.user._id)
-      .select("firstName lastName email");
+    const user = await userModel.findById(req.user._id).select("-password"); 
+
     if (!user) return res.status(404).json({ error: "User not found" });
 
     res.json({ user });
