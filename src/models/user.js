@@ -20,7 +20,10 @@ const userSchema = new mongoose.Schema(
         }
       },
     },
-    password: { type: String, required: true }
+    password: { type: String, required: true },
+    secret: { type: String }, 
+    otp: { type: String }, 
+    otpExpires: { type: Date },
   },
   { timestamps: true }
 );
