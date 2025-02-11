@@ -1,54 +1,69 @@
 const express = require("express");
 const scheduledPaymentModel = require("../models/payment");
 const { userAuth } = require("../middleware/auth");
-const sheduledPaymentModel = require("../models/payment");
-const sheduledRouter = express.Router();
+const scheduledRouter = express.Router();
 
-
-// ----------------------------- 1️⃣sheduling the payment-------------------------------------------------
-sheduledRouter.post("/shedule-payment", userAuth, async(req, res) =>{
-
-    try{
-
-        const{receipent, amount, frequency, nextExecutionDate} = req.body;
-        const newPayment = new sheduledPaymentModel({
-            userid:req.user._id,
-            receipent,
-            amount,
-            frequency,
-            nexExecutionDate
-        });
-
-        await newPayment.save();
-        res.status(201).json({message:"Payment sheduled successfully", newPayment});  
-    }
-    catch(err){
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ----------------------------- 1️⃣getting  the sheduled payment------------------------------------------
-sheduledRouter.get("/sheduled-payments", userAuth, async (req, res) => {
+// ----------------------------- 1️⃣ Scheduling the Payment -------------------------------------------------
+scheduledRouter.post("/schedule-payment", userAuth, async (req, res) => {
   try {
-    const payments = await sheduledPaymentModel.find({userid:req.user._id});
-    res.status(201).json(payments);
+    const { recipient, recipientName, amount, frequency, nextExecutionDate } =
+      req.body;
+
+    const newPayment = new scheduledPaymentModel({
+      userId: req.user._id,
+      senderName: req.user.firstName + " " + req.user.lastName,
+      recipient,
+      recipientName,
+      amount,
+      frequency,
+      nextExecutionDate,
+    });
+
+    await newPayment.save();
+    res
+      .status(201)
+      .json({ message: "Payment scheduled successfully", newPayment });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ----------------------------- 1️⃣cancelling the sheduled payment------------------------------------------
-sheduledRouter.delete("/sheduled-payment/:id", userAuth, async (req, res) => {
+// ----------------------------- 2️⃣ Getting the Scheduled Payments ------------------------------------------
+scheduledRouter.get("/scheduled-payments", userAuth, async (req, res) => {
   try {
-    const payment = await sheduledPaymentModel.findByIdAndDelete(req.params.id);
-    if(!payment){
-        res.status(404).json({message:"Payment not found"});
-    }
-    res.status(201).json({ message: "Scheduled payment deleted successfully" });
+    const payments = await scheduledPaymentModel.find({ userId: req.user._id });
+
+    const formattedPayments = payments.map((payment) => ({
+      id: payment._id,
+      senderName: payment.senderName,
+      recipient: payment.recipient,
+      recipientName: payment.recipientName,
+      amount: payment.amount,
+      frequency: payment.frequency,
+      nextExecutionDate: payment.nextExecutionDate,
+      status: payment.status,
+      createdAt: payment.createdAt,
+    }));
+
+    res.status(200).json(formattedPayments);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-module.exports = sheduledRouter;
+// ----------------------------- 3️⃣ Cancelling a Scheduled Payment ------------------------------------------
+scheduledRouter.delete("/scheduled-payment/:id", userAuth, async (req, res) => {
+  try {
+    const payment = await scheduledPaymentModel.findByIdAndDelete(
+      req.params.id
+    );
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+    res.status(200).json({ message: "Scheduled payment deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
+module.exports = scheduledRouter;
