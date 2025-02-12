@@ -5,10 +5,12 @@ const  accountModel  = require("../models/account");
 const { default: mongoose } = require("mongoose");
 const transactionModel = require("../models/transactions");
 const userModel = require("../models/user");
+const {verifyPin} = require("../middleware/verifyPin");
 
 
 
-accountRouter.get("/account/balance", userAuth, async (req, res) => {
+/* ----------------------------- 1️⃣ Checking Balance API ----------------------------- */
+accountRouter.get("/account/balance",  userAuth, async (req, res) => {
   try {
     const account = await accountModel.findOne({ userId: req.user._id });
     if (!account) {
@@ -23,8 +25,8 @@ accountRouter.get("/account/balance", userAuth, async (req, res) => {
   }
 });
 
-
-accountRouter.post("/account/transfer", userAuth, async (req, res) => {
+/* ----------------------------- 1️⃣ Transfering money API ----------------------------- */
+accountRouter.post("/account/transfer", userAuth, verifyPin,  async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -88,7 +90,8 @@ accountRouter.post("/account/transfer", userAuth, async (req, res) => {
   }
 });
 
-accountRouter.put("/account/update", userAuth, async (req, res) => {
+/* ----------------------------- 1️⃣ Balance updating API ----------------------------- */
+accountRouter.put("/account/update", userAuth, verifyPin,  async (req, res) => {
   try {
     const { amount } = req.body; 
     if (!amount || isNaN(amount) || amount <= 0) {
@@ -112,6 +115,7 @@ accountRouter.put("/account/update", userAuth, async (req, res) => {
   }
 });
 
+/* ----------------------------- 1️⃣ Getting all transactions API ----------------------------- */
 accountRouter.get("/account/transactions", userAuth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;

@@ -3,7 +3,7 @@ const botRouter = express.Router();
 const { userAuth } = require("../middleware/auth");
 const chatbotModel = require("../models/chatbot");
 
-
+/* ----------------------------- 1️⃣ Chatbot API ----------------------------- */
 botRouter.post("/chatbot/message", async (req, res) =>{
 
     try{

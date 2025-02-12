@@ -21,8 +21,9 @@ const transport = nodemailer.createTransport({
 /* ----------------------------- 1️⃣ Signup API ----------------------------- */
 authRouter.post("/signup", async (req, res) => {
   try {
-    const { firstName, lastName, email, password } = validate(req.body);
+    const { firstName, lastName, email, password, pin } = validate(req.body);
     const passwordHash = await bcrypt.hash(password, 10);
+    const pinHash = await bcrypt.hash(pin, 10);
 
     const user = new userModel({
       firstName,
@@ -34,7 +35,11 @@ authRouter.post("/signup", async (req, res) => {
 
   
     const userId = user._id;
-    await accountModel.create({ userId, balance: 1 + Math.random() * 1000 });
+    await accountModel.create({
+      userId,
+      balance: 1 + Math.random() * 1000,
+      pin: pinHash,
+    });
 
     return res.status(201).json({ message: "User Created Successfully" });
   } catch (err) {

@@ -24,7 +24,7 @@ const processPayments = async () => {
 
 
 
-      if (!sender || sender.balance < payment.amount) {
+      if (!sender || sender.balance < payment.amount || payment.amount<0) {
         payment.status = "failed";
         console.log(`❌ Insufficient balance for payment ${payment._id}`);
       } else {

@@ -6,8 +6,7 @@ const scheduledRouter = express.Router();
 // ----------------------------- 1️⃣ Scheduling the Payment -------------------------------------------------
 scheduledRouter.post("/schedule-payment", userAuth, async (req, res) => {
   try {
-    const { recipient, recipientName, amount, frequency, nextExecutionDate } =
-      req.body;
+    const { recipient, recipientName, amount, frequency, nextExecutionDate } = req.body;
 
     const newPayment = new scheduledPaymentModel({
       userId: req.user._id,
@@ -65,5 +64,7 @@ scheduledRouter.delete("/scheduled-payment/:id", userAuth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
 
 module.exports = scheduledRouter;

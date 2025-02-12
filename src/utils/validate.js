@@ -5,6 +5,7 @@ const validate = (reqBody) => {
   const lastName = reqBody.lastName?.trim();
   const email = reqBody.email?.trim();
   const password = reqBody.password;
+  const pin = reqBody.pin;
 
   if (!firstName || !lastName) {
     throw new Error("Name is not valid");
@@ -15,8 +16,11 @@ const validate = (reqBody) => {
   if (!validator.isStrongPassword(password)) {
     throw new Error("Please enter a strong password");
   }
+  if (!pin || !/^\d{4,6}$/.test(pin)) {
+    return res.status(400).json({ error: "PIN must be 4-6 digits" });
+  }
 
-  return { firstName, lastName, email, password };
+  return { firstName, lastName, email, password, pin };
 };
 
 const validateEditProfile = (reqBody) => {

@@ -7,7 +7,7 @@ const accountModel = require("../models/account");
 const bcrypt = require("bcrypt");
 const {userAuth} = require("../middleware/auth");
 
-
+/* ----------------------------- 1️⃣ Profile view API ----------------------------- */
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
     const { password, ...safeUser } = req.user._doc || req.user; 
@@ -20,7 +20,7 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
   }
 });
 
-
+/* ----------------------------- 1️⃣ Profile update  API ----------------------------- */
 profileRouter.put("/profile/update", userAuth, async (req, res) => {
   try {
     if (!validateEditProfile(req.body)) {
@@ -46,7 +46,7 @@ profileRouter.put("/profile/update", userAuth, async (req, res) => {
   }
 });
 
-
+/* ----------------------------- 1️⃣ Get Profiles API ----------------------------- */
 profileRouter.get("/profile/bulk", userAuth, async (req, res) => {
   try {
     const filter = req.query.filter || "";
@@ -88,6 +88,7 @@ profileRouter.get("/profile/bulk", userAuth, async (req, res) => {
   }
 });
 
+/* ----------------------------- 1️⃣ Profile me  API ----------------------------- */
 profileRouter.get("/profile/me", userAuth, async (req, res) => {
   try {
     const user = await userModel.findById(req.user._id).select("-password"); 
