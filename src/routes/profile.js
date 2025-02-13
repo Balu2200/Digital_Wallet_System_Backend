@@ -50,13 +50,15 @@ profileRouter.put("/profile/update", userAuth, async (req, res) => {
 profileRouter.get("/profile/bulk", userAuth, async (req, res) => {
   try {
     const filter = req.query.filter || "";
-    const page = parseInt(req.query.page) || 1; 
-    const limit = parseInt(req.query.limit) || 7; 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 7;
     const skip = (page - 1) * limit;
+    const loggedInUserId = req.user._id; 
 
     const users = await userModel
       .find(
         {
+          _id: { $ne: loggedInUserId }, 
           $or: [
             { firstName: { $regex: filter, $options: "i" } },
             { lastName: { $regex: filter, $options: "i" } },
@@ -68,6 +70,7 @@ profileRouter.get("/profile/bulk", userAuth, async (req, res) => {
       .limit(limit);
 
     const totalUsers = await userModel.countDocuments({
+      _id: { $ne: loggedInUserId }, 
       $or: [
         { firstName: { $regex: filter, $options: "i" } },
         { lastName: { $regex: filter, $options: "i" } },
