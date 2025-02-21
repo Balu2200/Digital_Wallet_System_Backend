@@ -1,58 +1,96 @@
 const cron = require("node-cron");
+const mongoose = require("mongoose");
 const ScheduledPayment = require("../models/payment");
 const transactionModel = require("../models/transactions");
+const accountModel = require("../models/account");
 const userModel = require("../models/user");
 
 const processPayments = async () => {
+  console.log("🔄 Checking for scheduled payments...");
+  const session = await mongoose.startSession();
+
   try {
-    console.log("🔄 Checking for scheduled payments...");
+    session.startTransaction();
     const now = new Date();
 
     const payments = await ScheduledPayment.find({
       nextExecutionDate: { $lte: now },
       status: "pending",
-    });
+    }).session(session);
 
     for (const payment of payments) {
+      const senderAccount = await accountModel
+        .findOne({ userId: payment.userId })
+        .session(session);
+      const receiverAccount = await accountModel
+        .findOne({ userId: payment.recipient })
+        .session(session);
 
-      const sender = await userModel.findById(payment.userId);
-      const receiver = await userModel.findById(payment.recipient);
+      const sender = await userModel.findById(payment.userId).session(session);
+      const receiver = await userModel
+        .findById(payment.recipient)
+        .session(session);
 
-      if (!receiver) {
-        console.warn(`⚠️ No user found for recipient ID: ${payment.recipient}`);
-      }
-
-
-
-      if (!sender || sender.balance < payment.amount || payment.amount<0) {
+      if (
+        !senderAccount ||
+        senderAccount.balance < payment.amount ||
+        payment.amount <= 0
+      ) {
         payment.status = "failed";
-        console.log(`❌ Insufficient balance for payment ${payment._id}`);
+        await transactionModel.create(
+          [
+            {
+              senderId: sender ? sender._id : null,
+              senderName: sender
+                ? `${sender.firstName} ${sender.lastName}`
+                : "Unknown Sender",
+              receiverId: receiver ? receiver._id : null,
+              receiverName: receiver
+                ? `${receiver.firstName} ${receiver.lastName}`
+                : "Unknown Recipient",
+              amount: payment.amount || 0,
+              status: "failed",
+              timestamp: new Date(),
+            },
+          ],
+          { session }
+        );
       } else {
-        sender.balance -= payment.amount;
-        await sender.save();
+        await accountModel.findOneAndUpdate(
+          { userId: senderAccount.userId },
+          { $inc: { balance: -payment.amount } },
+          { session }
+        );
 
-        if (receiver) {
-          receiver.balance += payment.amount;
-          await receiver.save();
+        if (receiverAccount) {
+          await accountModel.findOneAndUpdate(
+            { userId: receiverAccount.userId },
+            { $inc: { balance: payment.amount } },
+            { session }
+          );
         }
 
-        await transactionModel.create({
-          senderId: sender._id,
-          senderName: sender.firstName + " " + sender.lastName,
-          receiverId: receiver ? receiver._id : undefined,
-          receiverName: receiver
-            ? receiver.firstName + " " + receiver.lastName
-            : payment.recipient,
-          amount: payment.amount,
-          type: "scheduled",
-        });
-
-        console.log(
-          `✅ Processed payment ${payment._id} of ₹${payment.amount}`
+        await transactionModel.create(
+          [
+            {
+              senderId: sender ? sender._id : null,
+              senderName: sender
+                ? `${sender.firstName} ${sender.lastName}`
+                : "Unknown Sender",
+              receiverId: receiver ? receiver._id : null,
+              receiverName: receiver
+                ? `${receiver.firstName} ${receiver.lastName}`
+                : "Unknown Recipient",
+              amount: payment.amount || 0,
+              status: "success",
+              timestamp: new Date(),
+            },
+          ],
+          { session }
         );
+
         payment.status = "completed";
 
-  
         if (payment.frequency !== "one-time") {
           const nextDate = new Date(payment.nextExecutionDate);
           if (payment.frequency === "daily")
@@ -66,10 +104,16 @@ const processPayments = async () => {
           payment.status = "pending";
         }
       }
-      await payment.save();
+
+      await payment.save({ session });
     }
+
+    await session.commitTransaction();
   } catch (err) {
-    console.error("❌ Error processing scheduled payments:", err);
+    await session.abortTransaction();
+    console.error("Error processing scheduled payments:", err);
+  } finally {
+    session.endSession();
   }
 };
 

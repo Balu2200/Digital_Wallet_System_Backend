@@ -7,6 +7,7 @@ const scheduledRouter = express.Router();
 scheduledRouter.post("/schedule-payment", userAuth, async (req, res) => {
   try {
     const { recipient, recipientName, amount, frequency, nextExecutionDate } = req.body;
+    
 
     const newPayment = new scheduledPaymentModel({
       userId: req.user._id,

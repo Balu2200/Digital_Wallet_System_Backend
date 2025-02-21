@@ -57,82 +57,95 @@ authRouter.post("/login", async (req, res) => {
     }
 
     const user = await userModel.findOne({ email });
-    if (!user) throw new Error("User not found");
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     const isPasswordValid = await user.validatePassword(password);
-    if (!isPasswordValid) throw new Error("Invalid password");
+    if (!isPasswordValid)
+      return res.status(401).json({ error: "Invalid password" });
 
-   
+  
     if (!user.secret) {
       user.secret = speakeasy.generateSecret().base32;
       await user.save();
     }
 
- 
+   
     const otp = speakeasy.totp({
       secret: user.secret,
       encoding: "base32",
-      step: 60, 
+      step: 60,
     });
 
     user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 60 * 1000); 
+    user.otpExpires = new Date(Date.now() + 60 * 1000);
     await user.save();
 
-  
-    await transport.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Your PaySwift 2FA OTP",
-      text: `Your OTP for login is: ${otp}. It is valid for 60 seconds.`,
-    });
+ 
+    try {
+      await transport.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Your PaySwift 2FA OTP",
+        text: `Your OTP for login is: ${otp}. It is valid for 60 seconds.`,
+      });
+    } catch (emailErr) {
+      console.error("❌ Email sending failed:", emailErr);
+      return res.status(500).json({ error: "Failed to send OTP. Try again." });
+    }
 
     return res.json({
       message: "OTP Sent to Email. Please verify OTP to continue.",
       userId: user._id,
     });
   } catch (err) {
-    res.status(401).json({ error: err.message });
+    console.error("❌ Login Error:", err);
+    res.status(500).json({ error: "Server error. Please try again later." });
   }
 });
+
 
 /* ----------------------------- 3️⃣ Verify OTP API (Complete Login) ----------------------------- */
 authRouter.post("/verify-otp", async (req, res) => {
   try {
     const { userId, otp } = req.body;
     const user = await userModel.findById(userId);
-    if (!user) throw new Error("User not found");
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-   
-    if (!user.otpExpires || user.otpExpires < Date.now()) {
-      throw new Error("OTP expired. Please request a new one.");
+    if (!user.otpExpires || user.otpExpires.getTime() < Date.now()) {
+      return res
+        .status(401)
+        .json({ error: "OTP expired. Please request a new one." });
     }
 
+  
     const isValid = speakeasy.totp.verify({
       secret: user.secret,
       encoding: "base32",
       token: otp,
-      step: 60, 
-      window: 2, 
+      step: 60,
+      window: 2,
     });
 
-    if (!isValid) throw new Error("Invalid OTP");
+    if (!isValid) return res.status(401).json({ error: "Invalid OTP" });
 
+   
     user.otpExpires = null;
     await user.save();
 
-   
+
     const token = await user.getJWT();
     res.cookie("token", token, {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       httpOnly: true,
     });
 
-    return res.json({ message: "Login Successful", user });
+    return res.json({ message: "Login Successful", user, token });
   } catch (err) {
-    res.status(401).json({ error: err.message });
+    console.error("OTP Verification Error:", err);
+    res.status(500).json({ error: "Server error. Please try again later." });
   }
 });
+
 
 
 /* ----------------------------- 4️⃣ Logout API ----------------------------- */
