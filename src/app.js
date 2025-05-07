@@ -45,3 +45,6 @@ connectDb()
   .catch((err) => {
     console.log("❌ Database Connection Error:", err.message);
   });
+
+// Import the main application
+require('./index.js');
