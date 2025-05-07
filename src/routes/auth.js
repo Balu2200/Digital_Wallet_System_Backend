@@ -7,6 +7,7 @@ const userModel = require("../models/user");
 const accountModel = require("../models/account");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 
@@ -51,102 +52,98 @@ authRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ error: "Email and password are required." });
+      return res.status(400).json({ message: "Email and password are required" });
     }
 
     const user = await userModel.findOne({ email });
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    const isPasswordValid = await user.validatePassword(password);
-    if (!isPasswordValid)
-      return res.status(401).json({ error: "Invalid password" });
-
-  
-    if (!user.secret) {
-      user.secret = speakeasy.generateSecret().base32;
-      await user.save();
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-   
-    const otp = speakeasy.totp({
-      secret: user.secret,
-      encoding: "base32",
-      step: 60,
-    });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 60 * 1000);
     await user.save();
 
- 
+    // Send OTP via email
     try {
       await transport.sendMail({
         from: process.env.EMAIL_USER,
         to: email,
-        subject: "Your PaySwift 2FA OTP",
-        text: `Your OTP for login is: ${otp}. It is valid for 60 seconds.`,
+        subject: "Your PaySwift Login OTP",
+        text: `Your OTP for login is: ${otp}. It is valid for 10 minutes.`,
       });
     } catch (emailErr) {
-      console.error("❌ Email sending failed:", emailErr);
-      return res.status(500).json({ error: "Failed to send OTP. Try again." });
+      console.error("Email sending failed:", emailErr);
+      return res.status(500).json({ message: "Failed to send OTP. Please try again." });
     }
 
-    return res.json({
-      message: "OTP Sent to Email. Please verify OTP to continue.",
-      userId: user._id,
+    res.status(200).json({ 
+      message: "OTP sent successfully",
+      email: user.email 
     });
-  } catch (err) {
-    console.error("❌ Login Error:", err);
-    res.status(500).json({ error: "Server error. Please try again later." });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 });
-
 
 /* ----------------------------- 3️⃣ Verify OTP API (Complete Login) ----------------------------- */
 authRouter.post("/verify-otp", async (req, res) => {
   try {
-    const { userId, otp } = req.body;
-    const user = await userModel.findById(userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    if (!user.otpExpires || user.otpExpires.getTime() < Date.now()) {
-      return res
-        .status(401)
-        .json({ error: "OTP expired. Please request a new one." });
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
     }
 
-  
-    const isValid = speakeasy.totp.verify({
-      secret: user.secret,
-      encoding: "base32",
-      token: otp,
-      step: 60,
-      window: 2,
-    });
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    if (!isValid) return res.status(401).json({ error: "Invalid OTP" });
+    if (user.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
 
-   
-    user.otpExpires = null;
+    // Clear OTP after successful verification
+    user.otp = null;
     await user.save();
 
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
-    const token = await user.getJWT();
+    // Set cookie with secure attributes
     res.cookie("token", token, {
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: "/"
     });
 
-    return res.json({ message: "Login Successful", user, token });
-  } catch (err) {
-    console.error("OTP Verification Error:", err);
-    res.status(500).json({ error: "Server error. Please try again later." });
+    res.status(200).json({ 
+      message: "OTP verified successfully",
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName
+      }
+    });
+  } catch (error) {
+    console.error("OTP verification error:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 });
-
-
 
 /* ----------------------------- 4️⃣ Logout API ----------------------------- */
 authRouter.post("/logout", async (req, res) => {
