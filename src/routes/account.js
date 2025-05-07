@@ -6,27 +6,41 @@ const { default: mongoose } = require("mongoose");
 const transactionModel = require("../models/transactions");
 const userModel = require("../models/user");
 const {verifyPin} = require("../middleware/verifyPin");
+const jwt = require("jsonwebtoken");
 
+// Middleware to verify JWT token
+const verifyToken = (req, res, next) => {
+  const token = req.cookies.token;
+  
+  if (!token) {
+    return res.status(401).json({ message: "No token provided" });
+  }
 
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.userId;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+};
 
 /* ----------------------------- 1️⃣ Checking Balance API ----------------------------- */
-accountRouter.get("/account/balance",  userAuth, async (req, res) => {
+accountRouter.get("/account/balance", verifyToken, async (req, res) => {
   try {
-    const account = await accountModel.findOne({ userId: req.user._id });
+    const account = await accountModel.findOne({ userId: req.userId });
     if (!account) {
-      return res.status(404).json({ error: "No account found" });
+      return res.status(404).json({ message: "Account not found" });
     }
-    res.json({ balance: account.balance });
-  } catch (err) {
-    console.error("Balance retrieval error:", err);
-    res
-      .status(500)
-      .json({ error: "Something went wrong", message: err.message });
+    res.status(200).json({ balance: account.balance });
+  } catch (error) {
+    console.error("Balance fetch error:", error);
+    res.status(500).json({ message: "Error fetching balance" });
   }
 });
 
 /* ----------------------------- 1️⃣ Transfering money API ----------------------------- */
-accountRouter.post("/account/transfer", userAuth, verifyPin,  async (req, res) => {
+accountRouter.post("/account/transfer", verifyToken, verifyPin,  async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -91,14 +105,14 @@ accountRouter.post("/account/transfer", userAuth, verifyPin,  async (req, res) =
 });
 
 /* ----------------------------- 1️⃣ Balance updating API ----------------------------- */
-accountRouter.put("/account/update", userAuth, verifyPin,  async (req, res) => {
+accountRouter.put("/account/update", verifyToken, verifyPin,  async (req, res) => {
   try {
     const { amount } = req.body; 
     if (!amount || isNaN(amount) || amount <= 0) {
       return res.status(400).json({ error: "Invalid amount" });
     }
   
-    const account = await accountModel.findOne({ userId: req.user._id });
+    const account = await accountModel.findOne({ userId: req.userId });
     if (!account) {
       return res.status(404).json({ error: "No account found" });
     }
@@ -116,7 +130,7 @@ accountRouter.put("/account/update", userAuth, verifyPin,  async (req, res) => {
 });
 
 /* ----------------------------- 1️⃣ Getting all transactions API ----------------------------- */
-accountRouter.get("/account/transactions", userAuth, async (req, res) => {
+accountRouter.get("/account/transactions", verifyToken, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
@@ -124,7 +138,7 @@ accountRouter.get("/account/transactions", userAuth, async (req, res) => {
 
     const transactions = await transactionModel
       .find({
-        $or: [{ senderId: req.user._id }, { receiverId: req.user._id }],
+        $or: [{ senderId: req.userId }, { receiverId: req.userId }],
       })
       .sort({ timestamp: -1 })
       .skip(skip)
@@ -132,7 +146,7 @@ accountRouter.get("/account/transactions", userAuth, async (req, res) => {
       .select("senderName receiverName amount timestamp status"); 
 
     const totalTransactions = await transactionModel.countDocuments({
-      $or: [{ senderId: req.user._id }, { receiverId: req.user._id }],
+      $or: [{ senderId: req.userId }, { receiverId: req.userId }],
     });
 
     res.json({
@@ -149,5 +163,27 @@ accountRouter.get("/account/transactions", userAuth, async (req, res) => {
   }
 });
 
+/* ----------------------------- 1️⃣ Update account PIN API ----------------------------- */
+accountRouter.put("/account/pin", verifyToken, async (req, res) => {
+  try {
+    const { pin } = req.body;
+    if (!pin) {
+      return res.status(400).json({ message: "PIN is required" });
+    }
+
+    const account = await accountModel.findOne({ userId: req.userId });
+    if (!account) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+
+    account.pin = pin;
+    await account.save();
+
+    res.status(200).json({ message: "PIN updated successfully" });
+  } catch (error) {
+    console.error("PIN update error:", error);
+    res.status(500).json({ message: "Error updating PIN" });
+  }
+});
 
 module.exports = accountRouter;
