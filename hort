@@ -1,0 +1,271 @@
+[33mcommit f47fbf696c97cf114f520fe57ecacf866b413938[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-05-07
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-05-07
+
+    removed cors
+
+[33mcommit 9f25152aba1683602c020572b49478346b104e3f[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-05-07
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-05-07
+
+    added dependcies
+
+[33mcommit 689aa788ff29226da22f93d29d9094dd47f57c1c[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-05-07
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-05-07
+
+    remove cors
+
+[33mcommit 4c8df1b8c5d08f19b8f00eea5a3297d93a031915[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-05-07
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-05-07
+
+    changed
+
+[33mcommit 781fecf271ddb270f1cde6290dbc57d77097414a[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-05-07
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-05-07
+
+    added cors
+
+[33mcommit d34a940a46a5018232151893c99d495a9534b103[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-05-07
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-05-07
+
+    added deployed url
+
+[33mcommit 2346639da0dcc7cd2e5e672f3d3b8182a4b14ed9[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-28
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-28
+
+    added origin address
+
+[33mcommit dbe57ad6d9f04cff1fa5885d12511f1fdc3325d1[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-28
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-28
+
+    removed the origin address
+
+[33mcommit 594a8d51239534d4dee467039d3f173e411d7e15[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-21
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-21
+
+    fixed bugs in apis
+
+[33mcommit 5973f1b181a6c90ef2d860e539540a22a5b15e8f[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-13
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-13
+
+    fixed: profiles api
+
+[33mcommit ccb29d2727ef32f7e43fda648e776c42d5551a78[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-13
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-13
+
+    verification of pin
+
+[33mcommit f160e6c16370c4c183a6b9c7b85a60f9e8471ab0[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-13
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-13
+
+    added middleware for to verify-pin
+
+[33mcommit 7391f2b3a578fc380949a59b01cfa53525723337[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-11
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-11
+
+    added auto payment apis, model
+
+[33mcommit e55e59d27f6ae183a5a4160f9375ad6209a3e249[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-11
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-11
+
+    added the payment sheduled apis
+
+[33mcommit ec10a17b12479ed02c3e1c82a1f0030e8454f02a[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-10
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-10
+
+    added chatbot features
+
+[33mcommit 65cc16295bfebf88f4576b6361c12fb496cd2784[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-10
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-10
+
+    added custom chatbot api
+
+[33mcommit bc65d7cfdd0b15c38b66102a9507f63767fb6bd7[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-10
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-10
+
+    add two step authentication api
+
+[33mcommit 86a6e4b604eb61cb099c532c5dc8f95f1cc0a965[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    cors removed
+
+[33mcommit 77bc991fb27c4132a9f8355b76a421fe0784f273[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    cors added
+
+[33mcommit 74f251bdc44531dbf5c5313a8d35c6b5d5a0dae5[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    cors origin added
+
+[33mcommit 5cb6abf6c4c157752bd6bb82cc1e62edcf3663f3[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    cors error fixed
+
+[33mcommit 9a3505a2046623f4f35cc487a26b8957dc8b40d5[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    added frontend deployment link
+
+[33mcommit 372203333e35101629dd6c80d6093b4aa6ad7e97[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    fixed cors bug
+
+[33mcommit 1806c8ab98944c7061366b6971bf107cf358dda5[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    add frontend deployment link
+
+[33mcommit 5b5e734631d104c13993c3219c012b7fe1e25dc1[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    add transaction schema and modified the apis
+
+[33mcommit b754cc66ef242cb061423c85ea63804724038308[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    added transaction history api
+
+[33mcommit 72b70f3b2e272243267fd789048d57c913eb4407[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    fixed bugs in /me api
+
+[33mcommit 382e92a16676d9d6e7da0bf5598a96bb965103bf[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    added profile me api
+
+[33mcommit 78a2ea6d5dcab325f572b3aa828aa682a3f43877[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    added pagination
+
+[33mcommit 563febb4e1b6b2e24d60945b632ce2577eb18c12[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    added balance update api
+
+[33mcommit c01b18d5d0473554624e85072f7a93986a1f6d90[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-09
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-09
+
+    fixed logout bug
+
+[33mcommit 8e0b4ad6538dc70ca29213f7d88955ec79caba5c[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-08
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-08
+
+    added APIs
+
+[33mcommit 32731f4dbfa93eb080b1232e06108c6aae40b2fb[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-08
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-08
+
+    added profile router
+
+[33mcommit a861c247d75a5e74e4c3a7915f271edbf312d0bc[m
+Author:     BaluPasumarthi <balupasumarthi1@gmail.com>
+AuthorDate: 2025-02-08
+Commit:     BaluPasumarthi <balupasumarthi1@gmail.com>
+CommitDate: 2025-02-08
+
+    setup and authentication api
