@@ -8,7 +8,7 @@ const verifyPin = async (req, res, next) => {
     }
 
     const account = await accountModel
-      .findOne({ userId: req.user._id })
+      .findOne({ userId: req.userId })
       .select("+pin");
     if (!account) {
       return res.status(404).json({ error: "No account found" });
