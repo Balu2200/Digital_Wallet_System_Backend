@@ -15,7 +15,7 @@ const userAuth = async (req, res, next) => {
 
     if (!user) {
       return res.status(401).json({ error: "Unauthorized: User not found" });
-    }
+    } 
 
     req.user = user;
     req.userId = user._id; 
