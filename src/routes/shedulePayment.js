@@ -10,7 +10,7 @@ scheduledRouter.post("/schedule-payment", userAuth, async (req, res) => {
     
 
     const newPayment = new scheduledPaymentModel({
-      userId: req.user._id,
+      userId: req.userId,
       senderName: req.user.firstName + " " + req.user.lastName,
       recipient,
       recipientName,
@@ -31,7 +31,7 @@ scheduledRouter.post("/schedule-payment", userAuth, async (req, res) => {
 // ----------------------------- 2️⃣ Getting the Scheduled Payments ------------------------------------------
 scheduledRouter.get("/scheduled-payments", userAuth, async (req, res) => {
   try {
-    const payments = await scheduledPaymentModel.find({ userId: req.user._id });
+    const payments = await scheduledPaymentModel.find({ userId: req.userId });
 
     const formattedPayments = payments.map((payment) => ({
       id: payment._id,
