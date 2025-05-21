@@ -1,5 +1,8 @@
+token generated , it is in the cookies
+
 const express = require("express");
-const { userAuth } = require("../middleware/auth");
+const { userAuth } = require("../middlew
+are/auth");
 const accountRouter = express.Router();
 const  accountModel  = require("../models/account");
 const { default: mongoose } = require("mongoose");
@@ -105,35 +108,29 @@ accountRouter.post("/account/transfer", verifyToken, verifyPin,  async (req, res
 });
 
 /* ----------------------------- 1️⃣ Balance updating API ----------------------------- */
-accountRouter.put(
-  "/account/update",
-  verifyToken,
-  verifyPin,
-  async (req, res) => {
-    try {
-      const { amount } = req.body;
-      if (!amount || isNaN(amount) || amount <= 0) {
-        return res.status(400).json({ error: "Invalid amount" });
-      }
-
-      console.log("Updating balance for userId:", req.userId); 
-      const account = await accountModel.findOne({ userId: req.userId });
-      if (!account) {
-        console.log("No account found for userId:", req.userId); 
-        return res.status(404).json({ error: "No account found" });
-      }
-
-      account.balance += Number(amount);
-      await account.save();
-      res.json({ balance: account.balance });
-    } catch (err) {
-      console.error("Balance update error:", err);
-      res
-        .status(500)
-        .json({ error: "Something went wrong", message: err.message });
+accountRouter.put("/account/update", verifyToken, verifyPin,  async (req, res) => {
+  try {
+    const { amount } = req.body; 
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ error: "Invalid amount" });
     }
+  
+    const account = await accountModel.findOne({ userId: req.userId });
+    if (!account) {
+      return res.status(404).json({ error: "No account found" });
+    }
+
+    account.balance += Number(amount);
+    await account.save();
+    res.json({ balance: account.balance });
+    
+  } catch (err) {
+    console.error("Balance update error:", err);
+    res
+      .status(500)
+      .json({ error: "Something went wrong", message: err.message });
   }
-);
+});
 
 /* ----------------------------- 1️⃣ Getting all transactions API ----------------------------- */
 accountRouter.get("/account/transactions", verifyToken, async (req, res) => {
@@ -193,3 +190,5 @@ accountRouter.put("/account/pin", verifyToken, async (req, res) => {
 });
 
 module.exports = accountRouter;
+
+
