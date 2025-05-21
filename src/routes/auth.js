@@ -84,9 +84,10 @@ authRouter.post("/login", async (req, res) => {
       return res.status(500).json({ message: "Failed to send OTP. Please try again." });
     }
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: "OTP sent successfully",
-      email: user.email 
+      email: user.email,
+      userId: user._id,
     });
   } catch (error) {
     console.error("Login error:", error);
