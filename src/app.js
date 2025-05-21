@@ -6,17 +6,12 @@ require("dotenv").config();
 
 const app = express();
 
-// CORS configuration
-const allowedOrigins = [
-  'https://pay-swift-frontend.vercel.app',
-  'http://localhost:5173'
-];
-
+app.use(cors());
 
 app.use(express.json());
 app.use(cookieParser());
 
-// Routes
+
 const authRouter = require("./routes/auth");
 const accountRouter = require("./routes/account");
 const profileRouter = require("./routes/profile");
@@ -29,7 +24,7 @@ app.use("/", profileRouter);
 app.use("/", botRouter);
 app.use("/", scheduledRouter);
 
-// Error handling middleware
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Something went wrong!' });
@@ -38,19 +33,17 @@ app.use((err, req, res, next) => {
 
 connectDb()
   .then(() => {
-    console.log("✅ Database Connected");
+    console.log("Database Connected");
     
     const processPayments = require("./utils/paymentSheduler");
     processPayments();
-    console.log("🔄 Processing payments");
+    console.log("Processing payments");
 
     const PORT = process.env.PORT || 1234;
     app.listen(PORT, () => {
-      console.log(`🚀 Server started on port ${PORT}...`);
+      console.log(`Server started on port ${PORT}...`);
     });
   })
   .catch((err) => {
-    console.log("❌ Database Connection Error:", err.message);
+    console.log("Database Connection Error:", err.message);
   });
-
-require('./index.js');

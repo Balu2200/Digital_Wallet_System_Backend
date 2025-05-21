@@ -22,7 +22,7 @@ const transport = nodemailer.createTransport({
 /* ----------------------------- 1️⃣ Signup API ----------------------------- */
 authRouter.post("/signup", async (req, res) => {
   try {
-    const { firstName, lastName, email, password, pin } = validate(req.body);
+    const { firstName, lastName, email, password, pin, phoneNumber } = validate(req.body);
     const passwordHash = await bcrypt.hash(password, 10);
 
     const user = new userModel({
@@ -30,6 +30,7 @@ authRouter.post("/signup", async (req, res) => {
       lastName,
       email,
       password: passwordHash,
+      phoneNumber
     });
     await user.save();
 
