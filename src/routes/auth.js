@@ -98,12 +98,12 @@ authRouter.post("/login", async (req, res) => {
 /* ----------------------------- 3️⃣ Verify OTP API (Complete Login) ----------------------------- */
 authRouter.post("/verify-otp", async (req, res) => {
   try {
-    const { email, otp } = req.body;
-    if (!email || !otp) {
-      return res.status(400).json({ message: "Email and OTP are required" });
+    const { userId, otp } = req.body; // Change to userId
+    if (!userId || !otp) {
+      return res.status(400).json({ message: "User ID and OTP are required" });
     }
 
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findById(userId); // Use findById
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -117,11 +117,9 @@ authRouter.post("/verify-otp", async (req, res) => {
     await user.save();
 
     // Generate JWT token
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
 
     // Set cookie with secure attributes
     res.cookie("token", token, {
@@ -129,17 +127,17 @@ authRouter.post("/verify-otp", async (req, res) => {
       secure: true,
       sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      path: "/"
+      path: "/",
     });
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: "OTP verified successfully",
       user: {
         id: user._id,
         email: user.email,
         firstName: user.firstName,
-        lastName: user.lastName
-      }
+        lastName: user.lastName,
+      },
     });
   } catch (error) {
     console.error("OTP verification error:", error);
