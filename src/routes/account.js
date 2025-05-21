@@ -1,8 +1,5 @@
-token generated , it is in the cookies
-
 const express = require("express");
-const { userAuth } = require("../middlew
-are/auth");
+const { userAuth } = require("../middleware/auth");
 const accountRouter = express.Router();
 const  accountModel  = require("../models/account");
 const { default: mongoose } = require("mongoose");
