@@ -8,7 +8,7 @@ const app = express();
 
 const allowedOrigins = [
   // "http://localhost:5173",
-  "https://pay-swift-frontend-88gmv4fwk-balupasumarthis-projects.vercel.app/",
+  "https://pay-swift-frontend-88gmv4fwk-balupasumarthis-projects.vercel.app",
 ];
 
 app.use(
