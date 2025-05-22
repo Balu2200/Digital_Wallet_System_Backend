@@ -27,10 +27,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    phoneNumber: {
-      type: String,
-      unique: true,
-      sparse: true
+    pin: {
+      type: Number,
+      required: true
     },
     isVerified: {
       type: Boolean,
