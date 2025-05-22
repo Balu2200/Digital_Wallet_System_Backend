@@ -27,10 +27,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    pin: {
-      type: Number,
-      required: true
-    },
     isVerified: {
       type: Boolean,
       default: false,
