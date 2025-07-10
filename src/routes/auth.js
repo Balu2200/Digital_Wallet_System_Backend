@@ -32,6 +32,7 @@ authRouter.post("/signup", async (req, res) => {
       lastName,
       email,
       password: passwordHash,
+      isVerified : true
     });
     await user.save();
 
