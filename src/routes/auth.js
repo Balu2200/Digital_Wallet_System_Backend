@@ -68,12 +68,12 @@ authRouter.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Generate OTP
+   
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = otp;
     await user.save();
 
-    // Send OTP via email
+   
     try {
       await transport.sendMail({
         from: process.env.EMAIL_USER,
