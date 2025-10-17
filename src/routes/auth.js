@@ -59,7 +59,7 @@ authRouter.post("/login", async (req, res) => {
     user.otp = otp;
     await user.save();
 
-    // ✅ Send OTP via Mailtrap Email API
+    // ✅ Send OTP via Mailtrap API
     try {
       const response = await fetch("https://send.api.mailtrap.io/api/send", {
         method: "POST",
@@ -70,7 +70,7 @@ authRouter.post("/login", async (req, res) => {
         body: JSON.stringify({
           from: { email: "no-reply@payswift.com", name: "PaySwift" },
           to: [{ email }],
-          subject: "Your PaySwift Login OTP",
+          subject: "Your PayVault Login OTP",
           text: `Your OTP for login is: ${otp}. It is valid for 10 minutes.`,
         }),
       });
@@ -80,6 +80,8 @@ authRouter.post("/login", async (req, res) => {
         console.error("Mailtrap API Error:", errorText);
         return res.status(500).json({ message: "Failed to send OTP email" });
       }
+
+      console.log(`✅ OTP sent via Mailtrap: ${otp}`); // For debugging
     } catch (emailErr) {
       console.error("Email sending failed:", emailErr);
       return res.status(500).json({ message: "Email sending failed" });
