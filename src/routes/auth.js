@@ -10,14 +10,17 @@ const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 // ----------------------------- Gmail SMTP Transport -----------------------------
-const transport = nodemailer.createTransport({
+const transport = nodemailer.createTransporter({
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // true for port 465
+  port: 587, // Try port 587 first
+  secure: false, // false for ports 587, 465 is true
   auth: {
-    user: "balupasumarthi1@gmail.com", // your Gmail
-    pass: process.env.GMAIL_APP_PASSWORD, // Gmail app password
+    user: "balupasumarthi1@gmail.com",
+    pass: process.env.GMAIL_APP_PASSWORD,
   },
+  connectionTimeout: 30000, // 30 seconds
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
 });
 
 // ----------------------------- 1️⃣ Signup API -----------------------------
@@ -73,8 +76,8 @@ authRouter.post("/login", async (req, res) => {
     const mailOptions = {
       from: '"PaySwift" <balupasumarthi1@gmail.com>',
       to: email,
-      subject: "Your PaySwift Login OTP",
-      text: `Your OTP for login is: ${otp}. It is valid for 10 minutes.`,
+      subject: "Your PayVault Login OTP",
+      text: `Your One-Time Password (OTP) for your PayVault login is: ${otp}. This OTP is valid for the next 10 minutes. Please do not share this code with anyone.`,
     };
 
     try {
