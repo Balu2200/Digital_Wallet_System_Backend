@@ -1,16 +1,25 @@
 const express = require("express");
 const authRouter = express.Router();
 
-const speakeasy = require("speakeasy");
 const { validate } = require("../utils/validate");
 const userModel = require("../models/user");
 const accountModel = require("../models/account");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const fetch = require("node-fetch");
+const nodemailer = require("nodemailer");
 require("dotenv").config();
 
-/* ----------------------------- 1️⃣ Signup API ----------------------------- */
+// ----------------------------- Mailtrap SMTP Transport -----------------------------
+const transport = nodemailer.createTransport({
+  host: "sandbox.smtp.mailtrap.io",
+  port: 2525,
+  auth: {
+    user: "35b527cc37c8c4",
+    pass: "17ddac7686c14a",
+  },
+});
+
+// ----------------------------- 1️⃣ Signup API -----------------------------
 authRouter.post("/signup", async (req, res) => {
   try {
     const { firstName, lastName, email, password, pin } = validate(req.body);
@@ -33,13 +42,13 @@ authRouter.post("/signup", async (req, res) => {
       pin: pinHash,
     });
 
-    return res.status(201).json({ message: "User Created Successfully" });
+    res.status(201).json({ message: "User Created Successfully" });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
-/* ----------------------------- 2️⃣ Login API (Password Check + OTP via Mailtrap API) ----------------------------- */
+// ----------------------------- 2️⃣ Login API (Password + OTP) -----------------------------
 authRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -59,33 +68,16 @@ authRouter.post("/login", async (req, res) => {
     user.otp = otp;
     await user.save();
 
-    // ✅ Send OTP via Mailtrap API
-    try {
-      const response = await fetch("https://send.api.mailtrap.io/api/send", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.MAILTRAP_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: { email: "no-reply@payswift.com", name: "PaySwift" },
-          to: [{ email }],
-          subject: "Your PayVault Login OTP",
-          text: `Your OTP for login is: ${otp}. It is valid for 10 minutes.`,
-        }),
-      });
+    // ----------------------------- Send OTP via Mailtrap -----------------------------
+    const mailOptions = {
+      from: '"PaySwift" <no-reply@payswift.com>',
+      to: email, // On free sandbox, emails are captured in Mailtrap inbox
+      subject: "Your PayVault Login OTP",
+      text: `Your OTP for login is: ${otp}. It is valid for 10 minutes.`,
+    };
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Mailtrap API Error:", errorText);
-        return res.status(500).json({ message: "Failed to send OTP email" });
-      }
-
-      console.log(`✅ OTP sent via Mailtrap: ${otp}`); // For debugging
-    } catch (emailErr) {
-      console.error("Email sending failed:", emailErr);
-      return res.status(500).json({ message: "Email sending failed" });
-    }
+    await transport.sendMail(mailOptions);
+    console.log(`✅ OTP sent for ${email}: ${otp}`);
 
     res.status(200).json({
       message: "OTP sent successfully",
@@ -98,7 +90,7 @@ authRouter.post("/login", async (req, res) => {
   }
 });
 
-/* ----------------------------- 3️⃣ Verify OTP API ----------------------------- */
+// ----------------------------- 3️⃣ Verify OTP API -----------------------------
 authRouter.post("/verify-otp", async (req, res) => {
   try {
     const { userId, otp } = req.body;
@@ -141,7 +133,7 @@ authRouter.post("/verify-otp", async (req, res) => {
   }
 });
 
-/* ----------------------------- 4️⃣ Logout API ----------------------------- */
+// ----------------------------- 4️⃣ Logout API -----------------------------
 authRouter.post("/logout", async (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
