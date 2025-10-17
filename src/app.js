@@ -7,7 +7,7 @@ require("dotenv").config();
 const app = express();
 
 // ✅ Allow both localhost and deployed frontend
-const allowedOrigins = ["https://pay-swift-frontend.vercel.app/"];
+const allowedOrigins = ["https://pay-swift-frontend.vercel.app"];
 
 app.use(
   cors({
