@@ -12,8 +12,8 @@ require("dotenv").config();
 // ----------------------------- Gmail SMTP Transport -----------------------------
 const transport = nodemailer.createTransporter({
   host: "smtp.gmail.com",
-  port: 587, // Try port 587 first
-  secure: false, // false for ports 587, 465 is true
+  port: 465, 
+  secure: true,
   auth: {
     user: "balupasumarthi1@gmail.com",
     pass: process.env.GMAIL_APP_PASSWORD,
