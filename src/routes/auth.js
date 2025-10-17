@@ -12,10 +12,11 @@ require("dotenv").config();
 
 
 const transport = nodemailer.createTransport({
-  service: "gmail",
+  host: "live.smtp.mailtrap.io",
+  port: 587,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: "api",
+    pass: process.env.MAILTRAP_TOKEN,
   },
 });
 
