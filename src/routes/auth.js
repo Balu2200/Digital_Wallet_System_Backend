@@ -9,13 +9,14 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
-// ----------------------------- Mailtrap SMTP Transport -----------------------------
+// ----------------------------- Gmail SMTP Transport -----------------------------
 const transport = nodemailer.createTransport({
-  host: "sandbox.smtp.mailtrap.io",
-  port: 2525,
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // true for port 465
   auth: {
-    user: "35b527cc37c8c4",
-    pass: "17ddac7686c14a",
+    user: "balupasumarthi1@gmail.com", // your Gmail
+    pass: process.env.GMAIL_APP_PASSWORD, // Gmail app password
   },
 });
 
@@ -68,16 +69,21 @@ authRouter.post("/login", async (req, res) => {
     user.otp = otp;
     await user.save();
 
-    // ----------------------------- Send OTP via Mailtrap -----------------------------
+    // ----------------------------- Send OTP via Gmail -----------------------------
     const mailOptions = {
-      from: '"PaySwift" <no-reply@payswift.com>',
-      to: email, // On free sandbox, emails are captured in Mailtrap inbox
-      subject: "Your PayVault Login OTP",
+      from: '"PaySwift" <balupasumarthi1@gmail.com>',
+      to: email,
+      subject: "Your PaySwift Login OTP",
       text: `Your OTP for login is: ${otp}. It is valid for 10 minutes.`,
     };
 
-    await transport.sendMail(mailOptions);
-    console.log(`✅ OTP sent for ${email}: ${otp}`);
+    try {
+      await transport.sendMail(mailOptions);
+      console.log(`✅ OTP sent to ${email}: ${otp}`);
+    } catch (emailErr) {
+      console.error("Email sending failed:", emailErr);
+      return res.status(500).json({ message: "Failed to send OTP" });
+    }
 
     res.status(200).json({
       message: "OTP sent successfully",
