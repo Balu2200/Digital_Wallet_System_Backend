@@ -5,44 +5,32 @@ const speakeasy = require("speakeasy");
 const { validate } = require("../utils/validate");
 const userModel = require("../models/user");
 const accountModel = require("../models/account");
-const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const fetch = require("node-fetch");
 require("dotenv").config();
-
-
-const transport = nodemailer.createTransport({
-  host: "live.smtp.mailtrap.io",
-  port: 587,
-  auth: {
-    user: "api",
-    pass: process.env.MAILTRAP_TOKEN,
-  },
-});
 
 /* ----------------------------- 1️⃣ Signup API ----------------------------- */
 authRouter.post("/signup", async (req, res) => {
   try {
-    const { firstName, lastName, email, password, pin} = validate(req.body);
+    const { firstName, lastName, email, password, pin } = validate(req.body);
     const passwordHash = await bcrypt.hash(password, 10);
     const pinHash = await bcrypt.hash(pin, 10);
-
 
     const user = new userModel({
       firstName,
       lastName,
       email,
       password: passwordHash,
-      isVerified : true
+      isVerified: true,
     });
     await user.save();
 
-  
     const userId = user._id;
     await accountModel.create({
       userId,
       balance: 1 + Math.random() * 1000,
-      pin : pinHash
+      pin: pinHash,
     });
 
     return res.status(201).json({ message: "User Created Successfully" });
@@ -51,40 +39,50 @@ authRouter.post("/signup", async (req, res) => {
   }
 });
 
-/* ----------------------------- 2️⃣ Login API (Password Check + OTP) ----------------------------- */
+/* ----------------------------- 2️⃣ Login API (Password Check + OTP via Mailtrap API) ----------------------------- */
 authRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
-    }
+    if (!email || !password)
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
 
     const user = await userModel.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
-    }
 
-   
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = otp;
     await user.save();
 
-   
+    // ✅ Send OTP via Mailtrap Email API
     try {
-      await transport.sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Your PaySwift Login OTP",
-        text: `Your OTP for login is: ${otp}. It is valid for 10 minutes.`,
+      const response = await fetch("https://send.api.mailtrap.io/api/send", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.MAILTRAP_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: { email: "no-reply@payswift.com", name: "PaySwift" },
+          to: [{ email }],
+          subject: "Your PaySwift Login OTP",
+          text: `Your OTP for login is: ${otp}. It is valid for 10 minutes.`,
+        }),
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Mailtrap API Error:", errorText);
+        return res.status(500).json({ message: "Failed to send OTP email" });
+      }
     } catch (emailErr) {
       console.error("Email sending failed:", emailErr);
-      return res.status(500).json({ message: "Failed to send OTP. Please try again." });
+      return res.status(500).json({ message: "Email sending failed" });
     }
 
     res.status(200).json({
@@ -98,38 +96,31 @@ authRouter.post("/login", async (req, res) => {
   }
 });
 
-/* ----------------------------- 3️⃣ Verify OTP API (Complete Login) ----------------------------- */
+/* ----------------------------- 3️⃣ Verify OTP API ----------------------------- */
 authRouter.post("/verify-otp", async (req, res) => {
   try {
-    const { userId, otp } = req.body; // Change to userId
-    if (!userId || !otp) {
+    const { userId, otp } = req.body;
+    if (!userId || !otp)
       return res.status(400).json({ message: "User ID and OTP are required" });
-    }
 
-    const user = await userModel.findById(userId); // Use findById
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const user = await userModel.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (user.otp !== otp) {
+    if (user.otp !== otp)
       return res.status(400).json({ message: "Invalid OTP" });
-    }
 
-    // Clear OTP after successful verification
     user.otp = null;
     await user.save();
 
-    // Generate JWT token
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
 
-    // Set cookie with secure attributes
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 24 * 60 * 60 * 1000,
       path: "/",
     });
 
@@ -161,5 +152,3 @@ authRouter.post("/logout", async (req, res) => {
 });
 
 module.exports = authRouter;
-
-
