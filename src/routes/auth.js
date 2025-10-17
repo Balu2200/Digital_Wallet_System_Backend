@@ -12,15 +12,12 @@ require("dotenv").config();
 // ----------------------------- Gmail SMTP Transport -----------------------------
 const transport = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465, 
-  secure: true,
+  port: 587,
+  secure: false,
   auth: {
     user: "balupasumarthi1@gmail.com",
     pass: process.env.GMAIL_APP_PASSWORD,
   },
-  connectionTimeout: 30000, // 30 seconds
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
 });
 
 // ----------------------------- 1️⃣ Signup API -----------------------------
