@@ -6,9 +6,9 @@ require("dotenv").config();
 
 const app = express();
 
+// ✅ Allow both localhost and deployed frontend
 const allowedOrigins = [
-  // "http://localhost:5173",
-  "https://pay-swift-frontend.vercel.app",
+  "http://localhost:5173",
 ];
 
 app.use(
@@ -17,6 +17,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.error("❌ CORS blocked origin:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -26,11 +27,21 @@ app.use(
   })
 );
 
+// ✅ Handle preflight requests globally
+app.options(
+  "*",
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(express.json());
 app.use(cookieParser());
 
-
+// Routers
 const authRouter = require("./routes/auth");
 const accountRouter = require("./routes/account");
 const profileRouter = require("./routes/profile");
@@ -43,26 +54,26 @@ app.use("/", profileRouter);
 app.use("/", botRouter);
 app.use("/", scheduledRouter);
 
-
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  res.status(500).json({ message: "Something went wrong!" });
 });
 
-
+// Database + server start
 connectDb()
   .then(() => {
-    console.log("Database Connected");
-    
+    console.log("✅ Database Connected");
+
     const processPayments = require("./utils/paymentSheduler");
     processPayments();
-    console.log("Processing payments");
+    console.log("💸 Processing payments");
 
     const PORT = process.env.PORT || 1234;
     app.listen(PORT, () => {
-      console.log(`Server started on port ${PORT}...`);
+      console.log(`🚀 Server started on port ${PORT}...`);
     });
   })
   .catch((err) => {
-    console.log("Database Connection Error:", err.message);
+    console.log("❌ Database Connection Error:", err.message);
   });

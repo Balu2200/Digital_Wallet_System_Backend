@@ -1,17 +1,17 @@
 const express = require("express");
 const { userAuth } = require("../middleware/auth");
 const accountRouter = express.Router();
-const  accountModel  = require("../models/account");
+const accountModel = require("../models/account");
 const { default: mongoose } = require("mongoose");
 const transactionModel = require("../models/transactions");
 const userModel = require("../models/user");
-const {verifyPin} = require("../middleware/verifyPin");
+const { verifyPin } = require("../middleware/verifyPin");
 const jwt = require("jsonwebtoken");
 
 // Middleware to verify JWT token
 const verifyToken = (req, res, next) => {
   const token = req.cookies.token;
-  
+
   if (!token) {
     return res.status(401).json({ message: "No token provided" });
   }
@@ -40,94 +40,104 @@ accountRouter.get("/account/balance", verifyToken, async (req, res) => {
 });
 
 /* ----------------------------- 1️⃣ Transfering money API ----------------------------- */
-accountRouter.post("/account/transfer", verifyToken, verifyPin,  async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+accountRouter.post(
+  "/account/transfer",
+  verifyToken,
+  verifyPin,
+  async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-  try {
-    const { amount, to } = req.body;
-    if (!amount || amount <= 0) {
-      throw new Error("Invalid transfer amount");
+    try {
+      const { amount, to } = req.body;
+      if (!amount || amount <= 0) {
+        throw new Error("Invalid transfer amount");
+      }
+
+      const senderAccount = await accountModel
+        .findOne({ userId: req.userId })
+        .session(session);
+      if (!senderAccount || senderAccount.balance < amount) {
+        throw new Error("Insufficient balance");
+      }
+
+      const recipientAccount = await accountModel
+        .findOne({ userId: to })
+        .session(session);
+      if (!recipientAccount) {
+        throw new Error("Invalid recipient account");
+      }
+
+      const sender = await userModel.findById(req.userId);
+      const receiver = await userModel.findById(to);
+
+      if (!sender || !receiver) {
+        throw new Error("User details not found");
+      }
+
+      await accountModel
+        .updateOne({ userId: req.userId }, { $inc: { balance: -amount } })
+        .session(session);
+      await accountModel
+        .updateOne({ userId: to }, { $inc: { balance: amount } })
+        .session(session);
+
+      await transactionModel.create(
+        [
+          {
+            senderId: req.userId,
+            senderName: sender.firstName + " " + sender.lastName,
+            receiverId: to,
+            receiverName: receiver.firstName + " " + receiver.lastName,
+            amount,
+            status: "success",
+          },
+        ],
+        { session }
+      );
+
+      await session.commitTransaction();
+      res.json({ message: "Transaction successful" });
+    } catch (err) {
+      await session.abortTransaction();
+      console.error("Transaction error:", err);
+      res
+        .status(400)
+        .json({ error: "Transaction failed", message: err.message });
+    } finally {
+      session.endSession();
     }
-
-    const senderAccount = await accountModel
-      .findOne({ userId: req.userId })
-      .session(session);
-    if (!senderAccount || senderAccount.balance < amount) {
-      throw new Error("Insufficient balance");
-    }
-
-    const recipientAccount = await accountModel
-      .findOne({ userId: to })
-      .session(session);
-    if (!recipientAccount) {
-      throw new Error("Invalid recipient account");
-    }
-
-  
-    const sender = await userModel.findById(req.userId);
-    const receiver = await userModel.findById(to);
-
-    if (!sender || !receiver) {
-      throw new Error("User details not found");
-    }
-
-    await accountModel
-      .updateOne({ userId: req.userId }, { $inc: { balance: -amount } })
-      .session(session);
-    await accountModel
-      .updateOne({ userId: to }, { $inc: { balance: amount } })
-      .session(session);
-
-    await transactionModel.create(
-      [
-        {
-          senderId: req.userId,
-          senderName: sender.firstName + " " + sender.lastName,
-          receiverId: to,
-          receiverName: receiver.firstName + " " + receiver.lastName,
-          amount,
-          status: "success",
-        },
-      ],
-      { session }
-    );
-
-    await session.commitTransaction();
-    res.json({ message: "Transaction successful" });
-  } catch (err) {
-    await session.abortTransaction();
-    console.error("Transaction error:", err);
-    res.status(400).json({ error: "Transaction failed", message: err.message });
-  } finally {
-    session.endSession();
   }
-});
+);
 
 /* ----------------------------- 1️⃣ Balance updating API ----------------------------- */
-accountRouter.put("/account/update", verifyToken, verifyPin,  async (req, res) => {
-  try {
-    const { amount } = req.body; 
-    if (!amount || isNaN(amount) || amount <= 0) {
-      return res.status(400).json({ error: "Invalid amount" });
-    }
-  
-    const account = await accountModel.findOne({ userId: req.userId });
-    if (!account) {
-      return res.status(404).json({ error: "No account found" });
-    }
+accountRouter.put(
+  "/account/update",
+  verifyToken,
+  verifyPin,
+  async (req, res) => {
+    try {
+      const { amount } = req.body;
+      if (!amount || isNaN(amount) || amount <= 0) {
+        return res.status(400).json({ error: "Invalid amount" });
+      }
 
-    account.balance += Number(amount);
-    await account.save();
-    res.json({ balance: account.balance });
-    
-  } catch (err) {
-    console.error("Balance update error:", err);
-    res
-      .status(500)
-      .json({ error: "Something went wrong", message: err.message });
+      const account = await accountModel.findOne({ userId: req.userId });
+      if (!account) {
+        return res.status(404).json({ error: "No account found" });
+      }
+
+      account.balance += Number(amount);
+      await account.save();
+      res.json({ balance: account.balance });
+    } catch (err) {
+      console.error("Balance update error:", err);
+      res
+        .status(500)
+        .json({ error: "Something went wrong", message: err.message });
+    }
   }
-});
+);
 
 /* ----------------------------- 1️⃣ Getting all transactions API ----------------------------- */
 accountRouter.get("/account/transactions", verifyToken, async (req, res) => {
@@ -143,7 +153,7 @@ accountRouter.get("/account/transactions", verifyToken, async (req, res) => {
       .sort({ timestamp: -1 })
       .skip(skip)
       .limit(limit)
-      .select("senderName receiverName amount timestamp status"); 
+      .select("senderName receiverName amount timestamp status");
 
     const totalTransactions = await transactionModel.countDocuments({
       $or: [{ senderId: req.userId }, { receiverId: req.userId }],
@@ -186,6 +196,120 @@ accountRouter.put("/account/pin", verifyToken, async (req, res) => {
   }
 });
 
+/* ----------------------------- 1️⃣ Analytics API ----------------------------- */
+accountRouter.get("/account/analytics", verifyToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Get current balance
+    const account = await accountModel.findOne({ userId });
+    const currentBalance = account ? account.balance : 0;
+
+    // Get all transactions
+    const allTransactions = await transactionModel
+      .find({
+        $or: [{ senderId: userId }, { receiverId: userId }],
+      })
+      .sort({ timestamp: -1 });
+
+    // Calculate total sent, received, and failed
+    let totalSent = 0;
+    let totalReceived = 0;
+    let failedTransactions = 0;
+    let successfulTransactions = 0;
+
+    allTransactions.forEach((txn) => {
+      if (txn.status === "success") {
+        successfulTransactions++;
+        if (txn.senderId.toString() === userId.toString()) {
+          totalSent += txn.amount;
+        }
+        if (txn.receiverId.toString() === userId.toString()) {
+          totalReceived += txn.amount;
+        }
+      } else {
+        failedTransactions++;
+      }
+    });
+
+    // Monthly breakdown (last 6 months)
+    const monthlyData = {};
+    const now = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = date.toLocaleString("default", {
+        month: "short",
+        year: "numeric",
+      });
+      monthlyData[monthKey] = { sent: 0, received: 0 };
+    }
+
+    allTransactions.forEach((txn) => {
+      const txnDate = new Date(txn.timestamp);
+      const monthKey = txnDate.toLocaleString("default", {
+        month: "short",
+        year: "numeric",
+      });
+
+      if (monthlyData[monthKey] && txn.status === "success") {
+        if (txn.senderId.toString() === userId.toString()) {
+          monthlyData[monthKey].sent += txn.amount;
+        }
+        if (txn.receiverId.toString() === userId.toString()) {
+          monthlyData[monthKey].received += txn.amount;
+        }
+      }
+    });
+
+    // Recent transactions for activity
+    const recentTransactions = allTransactions.slice(0, 10).map((txn) => ({
+      type: txn.senderId.toString() === userId.toString() ? "sent" : "received",
+      amount: txn.amount,
+      name:
+        txn.senderId.toString() === userId.toString()
+          ? txn.receiverName
+          : txn.senderName,
+      date: txn.timestamp,
+      status: txn.status,
+    }));
+
+    // Category breakdown (top recipients/senders)
+    const categoryMap = {};
+    allTransactions.forEach((txn) => {
+      if (txn.status === "success") {
+        if (txn.senderId.toString() === userId.toString()) {
+          const name = txn.receiverName;
+          categoryMap[name] = (categoryMap[name] || 0) + txn.amount;
+        }
+      }
+    });
+
+    const topCategories = Object.entries(categoryMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, amount]) => ({ name, amount }));
+
+    res.json({
+      currentBalance,
+      totalSent,
+      totalReceived,
+      successfulTransactions,
+      failedTransactions,
+      totalTransactions: allTransactions.length,
+      monthlyData: Object.entries(monthlyData).map(([month, data]) => ({
+        month,
+        sent: data.sent,
+        received: data.received,
+      })),
+      recentTransactions,
+      topCategories,
+      netCashFlow: totalReceived - totalSent,
+    });
+  } catch (error) {
+    console.error("Analytics fetch error:", error);
+    res.status(500).json({ message: "Error fetching analytics data" });
+  }
+});
+
 module.exports = accountRouter;
-
-
