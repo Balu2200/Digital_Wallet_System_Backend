@@ -2,30 +2,34 @@ const express = require("express");
 const botRouter = express.Router();
 const { userAuth } = require("../middleware/auth");
 const chatbotModel = require("../models/chatbot");
+const { generateAnswer } = require("../utils/seedChatbot");
 
 /* ----------------------------- 1️⃣ Chatbot API ----------------------------- */
-botRouter.post("/chatbot/message", async (req, res) =>{
+botRouter.post("/chatbot/message", userAuth, async (req, res) => {
+  try {
+    const { question } = req.body;
+    const query = question.toLowerCase().trim();
 
-    try{
-        const {question} = req.body;
-        const query = question.toLowerCase().trim();
+    const existing = await chatbotModel.findOne({ question: query });
 
-        const chatbotresponse = await chatbotModel.findOne({question:query});
-
-        if(chatbotresponse){
-            return res.json({response:chatbotresponse.response})
-        }
-        else{
-            return res.json({
-              response:
-                "Sorry, I don't understand that. Please try a different question.",
-            });
-        }
-    }
-    catch(err){
-        res.status(500).json({ error: "Server error" });
+    if (existing) {
+      return res.json({ response: existing.response });
     }
 
+    const aiResponse = await generateAnswer(query);
+
+    const newEntry = new chatbotModel({
+      question: query,
+      response: aiResponse,
+    });
+
+    await newEntry.save();
+
+    return res.json({ response: aiResponse });
+  } catch (err) {
+    console.error("Chatbot Error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 module.exports = botRouter;

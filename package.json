@@ -16,6 +16,8 @@
     "dev": "nodemon src/app.js"
   },
   "dependencies": {
+    "@langchain/core": "^1.0.1",
+    "@langchain/openai": "^1.0.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
