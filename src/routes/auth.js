@@ -10,13 +10,12 @@ require("dotenv").config();
 
 
 
-// ----------------------------- 1️⃣ Signup API -----------------------------
+// ----------------------------- Signup API -----------------------------
 authRouter.post("/signup", async (req, res) => {
   try {
     const { firstName, lastName, email, password, pin } = validate(req.body);
     const pinHash = await bcrypt.hash(pin, 10);
 
-    // Let mongoose pre-save hook hash the password
     const user = new userModel({
       firstName,
       lastName,
@@ -39,7 +38,7 @@ authRouter.post("/signup", async (req, res) => {
   }
 });
 
-// ----------------------------- 2️⃣ Login API (Email + Password only) -----------------------------
+// ----------------------------- Login API (Email + Password only) -----------------------------
 authRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -88,7 +87,7 @@ authRouter.post("/login", async (req, res) => {
 });
 
 
-// ----------------------------- 4️⃣ Logout API -----------------------------
+// ----------------------------- Logout API -----------------------------
 authRouter.post("/logout", async (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,

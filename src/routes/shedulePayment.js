@@ -3,7 +3,7 @@ const scheduledPaymentModel = require("../models/payment");
 const { userAuth } = require("../middleware/auth");
 const scheduledRouter = express.Router();
 
-// ----------------------------- 1️⃣ Scheduling the Payment -------------------------------------------------
+// ----------------------------- Scheduling the Payment -------------------------------------------------
 scheduledRouter.post("/schedule-payment", userAuth, async (req, res) => {
   try {
     const { recipient, recipientName, amount, frequency, nextExecutionDate } = req.body;
@@ -28,7 +28,7 @@ scheduledRouter.post("/schedule-payment", userAuth, async (req, res) => {
   }
 });
 
-// ----------------------------- 2️⃣ Getting the Scheduled Payments ------------------------------------------
+// ----------------------------- Getting the Scheduled Payments ------------------------------------------
 scheduledRouter.get("/scheduled-payments", userAuth, async (req, res) => {
   try {
     const payments = await scheduledPaymentModel.find({ userId: req.userId });
@@ -51,7 +51,7 @@ scheduledRouter.get("/scheduled-payments", userAuth, async (req, res) => {
   }
 });
 
-// ----------------------------- 3️⃣ Cancelling a Scheduled Payment ------------------------------------------
+// ----------------------------- Cancelling a Scheduled Payment ------------------------------------------
 scheduledRouter.delete("/scheduled-payment/:id", userAuth, async (req, res) => {
   try {
     const payment = await scheduledPaymentModel.findByIdAndDelete(

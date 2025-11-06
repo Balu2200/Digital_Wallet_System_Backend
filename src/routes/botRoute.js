@@ -4,7 +4,7 @@ const { userAuth } = require("../middleware/auth");
 const chatbotModel = require("../models/chatbot");
 const { generateAnswer } = require("../utils/seedChatbot");
 
-/* ----------------------------- 1️⃣ Chatbot API ----------------------------- */
+/* ----------------------------- Chatbot API ----------------------------- */
 botRouter.post("/chatbot/message", userAuth, async (req, res) => {
   try {
     const { question } = req.body;

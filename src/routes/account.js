@@ -8,7 +8,7 @@ const userModel = require("../models/user");
 const { verifyPin } = require("../middleware/verifyPin");
 const jwt = require("jsonwebtoken");
 
-// Middleware to verify JWT token
+
 const verifyToken = (req, res, next) => {
   const token = req.cookies.token;
 
@@ -25,7 +25,7 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-/* ----------------------------- 1️⃣ Checking Balance API ----------------------------- */
+/* ----------------------------- Checking Balance API ----------------------------- */
 accountRouter.get("/account/balance", verifyToken, async (req, res) => {
   try {
     const account = await accountModel.findOne({ userId: req.userId });
@@ -39,7 +39,7 @@ accountRouter.get("/account/balance", verifyToken, async (req, res) => {
   }
 });
 
-/* ----------------------------- 1️⃣ Transfering money API ----------------------------- */
+/* ----------------------------- Transfering money API ----------------------------- */
 accountRouter.post(
   "/account/transfer",
   verifyToken,
@@ -110,7 +110,7 @@ accountRouter.post(
   }
 );
 
-/* ----------------------------- 1️⃣ Balance updating API ----------------------------- */
+/* ----------------------------- Balance updating API ----------------------------- */
 accountRouter.put(
   "/account/update",
   verifyToken,
@@ -139,7 +139,7 @@ accountRouter.put(
   }
 );
 
-/* ----------------------------- 1️⃣ Getting all transactions API ----------------------------- */
+/* ----------------------------- Getting all transactions API ----------------------------- */
 accountRouter.get("/account/transactions", verifyToken, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -173,7 +173,7 @@ accountRouter.get("/account/transactions", verifyToken, async (req, res) => {
   }
 });
 
-/* ----------------------------- 1️⃣ Update account PIN API ----------------------------- */
+/* ----------------------------- Update account PIN API ----------------------------- */
 accountRouter.put("/account/pin", verifyToken, async (req, res) => {
   try {
     const { pin } = req.body;
@@ -196,23 +196,22 @@ accountRouter.put("/account/pin", verifyToken, async (req, res) => {
   }
 });
 
-/* ----------------------------- 1️⃣ Analytics API ----------------------------- */
+/* ----------------------------- Analytics API ----------------------------- */
 accountRouter.get("/account/analytics", verifyToken, async (req, res) => {
   try {
     const userId = req.userId;
 
-    // Get current balance
+    
     const account = await accountModel.findOne({ userId });
     const currentBalance = account ? account.balance : 0;
 
-    // Get all transactions
+  
     const allTransactions = await transactionModel
       .find({
         $or: [{ senderId: userId }, { receiverId: userId }],
       })
       .sort({ timestamp: -1 });
 
-    // Calculate total sent, received, and failed
     let totalSent = 0;
     let totalReceived = 0;
     let failedTransactions = 0;
@@ -232,7 +231,7 @@ accountRouter.get("/account/analytics", verifyToken, async (req, res) => {
       }
     });
 
-    // Monthly breakdown (last 6 months)
+  
     const monthlyData = {};
     const now = new Date();
 
@@ -262,7 +261,7 @@ accountRouter.get("/account/analytics", verifyToken, async (req, res) => {
       }
     });
 
-    // Recent transactions for activity
+   
     const recentTransactions = allTransactions.slice(0, 10).map((txn) => ({
       type: txn.senderId.toString() === userId.toString() ? "sent" : "received",
       amount: txn.amount,
@@ -274,7 +273,7 @@ accountRouter.get("/account/analytics", verifyToken, async (req, res) => {
       status: txn.status,
     }));
 
-    // Category breakdown (top recipients/senders)
+    
     const categoryMap = {};
     allTransactions.forEach((txn) => {
       if (txn.status === "success") {
