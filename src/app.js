@@ -15,7 +15,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.error("❌ CORS blocked origin:", origin);
+        console.error("CORS blocked origin:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -61,17 +61,17 @@ app.use((err, req, res, next) => {
 
 connectDb()
   .then(() => {
-    console.log("✅ Database Connected");
+    console.log("Database Connected");
 
     const processPayments = require("./utils/paymentSheduler");
     processPayments();
-    console.log("💸 Processing payments");
+    console.log("Processing payments");
 
     const PORT = process.env.PORT || 1234;
     app.listen(PORT, () => {
-      console.log(`🚀 Server started on port ${PORT}...`);
+      console.log(`Server started on port ${PORT}...`);
     });
   })
   .catch((err) => {
-    console.log("❌ Database Connection Error:", err.message);
+    console.log("Database Connection Error:", err.message);
   });
