@@ -6,7 +6,7 @@ const accountModel = require("../models/account");
 const userModel = require("../models/user");
 
 const processPayments = async () => {
-  console.log("🔄 Checking for scheduled payments...");
+  console.log("Checking for scheduled payments...");
   const session = await mongoose.startSession();
 
   try {

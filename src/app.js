@@ -6,7 +6,7 @@ require("dotenv").config();
 
 const app = express();
 
-// ✅ Allow both localhost and deployed frontend
+
 const allowedOrigins = ["https://pay-swift-frontend.vercel.app"];
 
 app.use(
@@ -39,7 +39,7 @@ app.options(
 app.use(express.json());
 app.use(cookieParser());
 
-// Routers
+
 const authRouter = require("./routes/auth");
 const accountRouter = require("./routes/account");
 const profileRouter = require("./routes/profile");
@@ -52,13 +52,13 @@ app.use("/", profileRouter);
 app.use("/", botRouter);
 app.use("/", scheduledRouter);
 
-// Error handler
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: "Something went wrong!" });
 });
 
-// Database + server start
+
 connectDb()
   .then(() => {
     console.log("✅ Database Connected");
